@@ -109,7 +109,7 @@ export const GraphDashboard: React.FC<GraphDashboardProps> = ({ className = '' }
         serviceName: connection.serviceName,
         username: connection.username || 'unknown',
         password: '', // Password not stored in connection for security
-        authenticationType: 'BASIC'
+        authenticationType: 'DIRECT'
       };
 
       const data = await GraphApiService.fetchOracleGraphData(
