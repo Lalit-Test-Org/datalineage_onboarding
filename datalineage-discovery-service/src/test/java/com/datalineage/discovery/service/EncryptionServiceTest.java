@@ -15,14 +15,8 @@ class EncryptionServiceTest {
     @BeforeEach
     void setUp() {
         encryptionService = new EncryptionService();
-        // Set the encryption key manually for testing
-        try {
-            var field = EncryptionService.class.getDeclaredField("encryptionKey");
-            field.setAccessible(true);
-            field.set(encryptionService, "testEncryptionKey123456");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set encryption key for test", e);
-        }
+        // Set the encryption key manually for testing using setter
+        encryptionService.setEncryptionKey("testEncryptionKey123456");
     }
     
     @Test
