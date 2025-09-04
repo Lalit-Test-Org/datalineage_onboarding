@@ -29,6 +29,7 @@
         <module>datalineage-metadata-service</module>
         <module>datalineage-lineage-service</module>
         <module>datalineage-discovery-service</module>
+        <module>datalineage-oracle-discovery-service</module>
     </modules>
 
     <dependencyManagement>
