@@ -6,7 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for OracleConnectionService
@@ -68,5 +72,34 @@ class OracleConnectionServiceTest {
         assertEquals(Integer.valueOf(30), config.getConnectionTimeout());
         assertEquals(Integer.valueOf(60), config.getReadTimeout());
         assertEquals(Boolean.FALSE, config.getUseSSL());
+    }
+    
+    @Test
+    void testCloseConnectionWithValidConnection() {
+        // Test that closeConnection works correctly with a valid connection
+        // This test confirms the logging mechanism doesn't break normal operation
+        Connection mockConnection = mock(Connection.class);
+        
+        // This should not throw any exceptions
+        assertDoesNotThrow(() -> connectionService.closeConnection(mockConnection));
+    }
+    
+    @Test
+    void testCloseConnectionWithNullConnection() {
+        // Test that closeConnection handles null connections gracefully
+        assertDoesNotThrow(() -> connectionService.closeConnection(null));
+    }
+    
+    @Test
+    void testCloseConnectionWithSQLException() throws SQLException {
+        // Test that closeConnection properly logs errors when SQLException occurs
+        Connection mockConnection = mock(Connection.class);
+        doThrow(new SQLException("Test SQLException")).when(mockConnection).close();
+        
+        // This should not throw any exceptions, just log the error
+        assertDoesNotThrow(() -> connectionService.closeConnection(mockConnection));
+        
+        // Verify that close was actually called
+        verify(mockConnection, times(1)).close();
     }
 }
