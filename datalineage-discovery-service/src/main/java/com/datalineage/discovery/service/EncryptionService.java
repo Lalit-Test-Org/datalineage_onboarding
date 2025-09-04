@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
@@ -18,10 +19,15 @@ import java.security.SecureRandom;
 public class EncryptionService {
     
     private static final String ALGORITHM = "AES";
-    private static final String TRANSFORMATION = "AES";
+    private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
     
     @Value("${datalineage.encryption.key:defaultEncryptionKey123456}")
     private String encryptionKey;
+    
+    // Setter for testing purposes
+    public void setEncryptionKey(String encryptionKey) {
+        this.encryptionKey = encryptionKey;
+    }
     
     /**
      * Encrypts a plain text string
@@ -34,10 +40,22 @@ public class EncryptionService {
         try {
             SecretKey secretKey = getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            
+            // Generate random IV for CBC mode
+            byte[] iv = new byte[16]; // AES block size is always 16 bytes
+            new SecureRandom().nextBytes(iv);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
             
             byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(encryptedBytes);
+            
+            // Prepend IV to encrypted data
+            byte[] encryptedWithIv = new byte[iv.length + encryptedBytes.length];
+            System.arraycopy(iv, 0, encryptedWithIv, 0, iv.length);
+            System.arraycopy(encryptedBytes, 0, encryptedWithIv, iv.length, encryptedBytes.length);
+            
+            return Base64.getEncoder().encodeToString(encryptedWithIv);
             
         } catch (Exception e) {
             throw new RuntimeException("Error encrypting data", e);
@@ -55,10 +73,20 @@ public class EncryptionService {
         try {
             SecretKey secretKey = getSecretKey();
             Cipher cipher = Cipher.getInstance(TRANSFORMATION);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
             
-            byte[] decodedBytes = Base64.getDecoder().decode(encryptedText);
-            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            byte[] encryptedWithIv = Base64.getDecoder().decode(encryptedText);
+            
+            // Extract IV from the first 16 bytes
+            byte[] iv = new byte[16];
+            System.arraycopy(encryptedWithIv, 0, iv, 0, iv.length);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            
+            // Extract encrypted data from remaining bytes
+            byte[] encryptedBytes = new byte[encryptedWithIv.length - iv.length];
+            System.arraycopy(encryptedWithIv, iv.length, encryptedBytes, 0, encryptedBytes.length);
+            
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
             return new String(decryptedBytes, StandardCharsets.UTF_8);
             
         } catch (Exception e) {

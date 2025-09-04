@@ -73,4 +73,23 @@ class EncryptionServiceTest {
         assertNotNull(key);
         assertTrue(key.length() > 0);
     }
+    
+    @Test
+    void testEncryptionProducesUniqueOutputForSameInput() {
+        String plainText = "sensitiveData123";
+        
+        String encrypted1 = encryptionService.encrypt(plainText);
+        String encrypted2 = encryptionService.encrypt(plainText);
+        
+        // Due to random IV, same input should produce different encrypted output
+        assertNotNull(encrypted1);
+        assertNotNull(encrypted2);
+        assertNotEquals(encrypted1, encrypted2, "Each encryption should produce unique output due to random IV");
+        
+        // But both should decrypt to the same original text
+        String decrypted1 = encryptionService.decrypt(encrypted1);
+        String decrypted2 = encryptionService.decrypt(encrypted2);
+        assertEquals(plainText, decrypted1);
+        assertEquals(plainText, decrypted2);
+    }
 }
