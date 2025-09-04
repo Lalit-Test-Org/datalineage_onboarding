@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    config:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.config.client.ConfigClientAutoConfiguration
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    com.datalineage: DEBUG
