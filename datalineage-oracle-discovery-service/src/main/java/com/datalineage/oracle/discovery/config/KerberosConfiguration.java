@@ -25,8 +25,12 @@ public class KerberosConfiguration extends Configuration {
         options.put("useTicketCache", "true");
         options.put("renewTGT", "true");
         options.put("doNotPrompt", "true");
-        options.put("realm", realm);
-        options.put("kdc", kdc);
+        if (realm != null) {
+            options.put("realm", realm);
+        }
+        if (kdc != null) {
+            options.put("kdc", kdc);
+        }
         
         AppConfigurationEntry entry = new AppConfigurationEntry(
             "com.sun.security.auth.module.Krb5LoginModule",
