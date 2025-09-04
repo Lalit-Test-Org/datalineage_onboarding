@@ -36,4 +36,4 @@ datalineage:
   oracle-discovery-service:
     url: http://localhost:8082
   encryption:
-    key: mySecureEncryptionKey123456
+    key: ${ENCRYPTION_KEY}
