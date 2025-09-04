@@ -1,10 +1,11 @@
-# Oracle Database Onboarding UI
+# Data Lineage UI
 
-A React.js frontend application for onboarding Oracle databases to the Data Lineage Discovery Service. This application provides a user-friendly interface for configuring Oracle database connections with support for both Direct and Kerberos authentication.
+A React.js frontend application for managing database connections and onboarding to the Data Lineage Discovery Service. This application provides a user-friendly interface for configuring database connections with comprehensive authentication support, starting with Oracle databases and designed to be extended for additional database types.
 
 ## Features
 
-### 🚀 Comprehensive Oracle Database Onboarding
+### 🚀 Comprehensive Database Onboarding
+- **Oracle Database Support**: Full Oracle database onboarding with Direct and Kerberos authentication
 - **Direct Authentication**: Username/password-based connections
 - **Kerberos Authentication**: Enterprise-grade security with realm, KDC, principal, and keytab configuration
 - **Connection Testing**: Real-time validation of database connectivity
@@ -18,9 +19,10 @@ A React.js frontend application for onboarding Oracle databases to the Data Line
 
 ### 🔧 Modular Architecture
 - **TypeScript Support**: Type-safe development with comprehensive interfaces
-- **Component-based**: Reusable components for future database types
+- **Component-based**: Reusable components designed for multiple database types
 - **Service Layer**: Clean API integration with error handling
 - **Utility Functions**: Validation helpers and form utilities
+- **Extensible Design**: Easy to add support for additional database types
 
 ### 🔒 Security Features
 - **Input Sanitization**: XSS protection for all form inputs
@@ -38,7 +40,7 @@ A React.js frontend application for onboarding Oracle databases to the Data Line
 
 1. **Navigate to the UI directory:**
    ```bash
-   cd oracle-onboarding-ui
+   cd datalineage-ui
    ```
 
 2. **Install dependencies:**
@@ -62,7 +64,7 @@ npm run build
 
 ## Usage
 
-### Onboarding a New Oracle Database
+### Onboarding a New Database
 
 1. **Navigate to the "Onboard Database" tab**
 2. **Fill in Basic Information** (Connection Name, Host, Port, Service Name)
@@ -73,12 +75,13 @@ npm run build
 ### Managing Existing Connections
 
 1. **Navigate to the "Manage Connections" tab**
-2. **View all configured Oracle connections**
+2. **View all configured database connections**
 3. **Test, Edit, or Delete** connections as needed
 
 ## API Integration
 
-Communicates with Data Lineage Discovery Service API at `http://localhost:8083/api/v1/oracle`
+Communicates with Data Lineage Discovery Service API:
+- Oracle databases: `http://localhost:8083/api/v1/oracle`
 
 ## Development
 
@@ -90,12 +93,21 @@ Communicates with Data Lineage Discovery Service API at `http://localhost:8083/a
 
 ### Architecture
 
-The application follows a modular architecture to support future database types:
-- Components are organized by database type (`src/components/oracle/`)
+The application follows a modular architecture to support multiple database types:
+- Components are organized by database type (`src/components/oracle/`, future: `src/components/postgresql/`, etc.)
 - TypeScript interfaces ensure type safety (`src/types/`)
 - Service layer handles API communication (`src/services/`)
 - Utility functions provide validation and helpers (`src/utils/`)
 
+### Adding Support for New Database Types
+
+The modular architecture makes it easy to add support for additional databases:
+
+1. **Create database-specific components** in `src/components/{database-type}/`
+2. **Add TypeScript interfaces** in `src/types/{database-type}.ts`
+3. **Implement API service** in `src/services/{database-type}Api.ts`
+4. **Update main dashboard** to include new database option
+
 ## Screenshots
 
-The UI provides intuitive forms for both Direct and Kerberos authentication, with comprehensive validation and error handling.
+The UI provides intuitive forms for database onboarding with comprehensive validation and error handling, currently supporting Oracle databases with plans for additional database types.
