@@ -3,11 +3,15 @@ import {
   OracleOnboardingRequest, 
   OracleConnection, 
   ApiResponse, 
-  ConnectionTestResult 
+  ConnectionTestResult,
+  MetadataDiscoveryRequest,
+  MetadataDiscoveryResponse
 } from '../types/oracle';
 
 // Base URL for the Oracle onboarding API
 const BASE_URL = 'http://localhost:8083/api/v1/oracle';
+// Base URL for the Oracle discovery API
+const DISCOVERY_BASE_URL = 'http://localhost:8084/api/v1/oracle-discovery';
 
 // Create axios instance with default configuration
 const apiClient = axios.create({
@@ -18,11 +22,29 @@ const apiClient = axios.create({
   },
 });
 
+// Create discovery service axios instance
+const discoveryClient = axios.create({
+  baseURL: DISCOVERY_BASE_URL,
+  timeout: 120000, // Longer timeout for metadata discovery
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // API response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
+// Discovery API response interceptor
+discoveryClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('Discovery API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
@@ -122,6 +144,61 @@ export class OracleApiService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Health check failed');
+    }
+  }
+
+  /**
+   * Discover metadata for a connection using the discovery service
+   */
+  static async discoverMetadata(
+    connectionId: string, 
+    discoveryRequest?: Partial<MetadataDiscoveryRequest>
+  ): Promise<ApiResponse<MetadataDiscoveryResponse>> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (discoveryRequest?.schemas) {
+        params.append('schemas', discoveryRequest.schemas.join(','));
+      }
+      if (discoveryRequest?.tablePatterns) {
+        params.append('tablePatterns', discoveryRequest.tablePatterns.join(','));
+      }
+      if (discoveryRequest?.includeTables !== undefined) {
+        params.append('includeTables', discoveryRequest.includeTables.toString());
+      }
+      if (discoveryRequest?.includeColumns !== undefined) {
+        params.append('includeColumns', discoveryRequest.includeColumns.toString());
+      }
+      if (discoveryRequest?.includeProcedures !== undefined) {
+        params.append('includeProcedures', discoveryRequest.includeProcedures.toString());
+      }
+      if (discoveryRequest?.includeConstraints !== undefined) {
+        params.append('includeConstraints', discoveryRequest.includeConstraints.toString());
+      }
+      if (discoveryRequest?.limit) {
+        params.append('limit', discoveryRequest.limit.toString());
+      }
+      if (discoveryRequest?.offset) {
+        params.append('offset', discoveryRequest.offset.toString());
+      }
+
+      const url = `/connections/${connectionId}/discover${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await discoveryClient.post<ApiResponse<MetadataDiscoveryResponse>>(url);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to discover metadata');
+    }
+  }
+
+  /**
+   * Check discovery service health
+   */
+  static async discoveryHealthCheck(): Promise<ApiResponse<any>> {
+    try {
+      const response = await discoveryClient.get<ApiResponse<any>>('/health');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Discovery service health check failed');
     }
   }
 }
