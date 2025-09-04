@@ -328,16 +328,6 @@ public class OracleGraphService {
             .orElse(null);
     }
 
-    private String findTableIdByOwner(List<OracleTable> tables, String owner) {
-        if (tables == null) return null;
-        
-        return tables.stream()
-            .filter(t -> t.getOwner().equals(owner))
-            .findFirst()
-            .map(t -> "table-" + t.getId())
-            .orElse(null);
-    }
-
     private GraphData.GraphStatistics generateGraphStatistics(List<GraphNode> nodes, List<GraphEdge> edges) {
         Map<String, Integer> nodeTypeBreakdown = new HashMap<>();
         Map<String, Integer> edgeTypeBreakdown = new HashMap<>();
