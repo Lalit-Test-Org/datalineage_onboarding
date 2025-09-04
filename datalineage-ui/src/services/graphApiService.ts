@@ -25,7 +25,7 @@ export interface OracleConnectionConfig {
   serviceName: string;
   username: string;
   password: string;
-  authenticationType: 'BASIC' | 'KERBEROS';
+  authenticationType: 'DIRECT' | 'KERBEROS';
 }
 
 /**
@@ -72,18 +72,18 @@ export class GraphApiService {
       params.append('limit', String(options?.limit ?? 1000));
       params.append('offset', String(options?.offset ?? 0));
 
-      const url = `${this.ORACLE_DISCOVERY_BASE}/connections/${connectionId}/discover?${params.toString()}`;
+      const url = `${this.ORACLE_DISCOVERY_BASE}/graph/schema/${connectionId}?${params.toString()}`;
       
       const response = await axios.post<{
         success: boolean;
         message: string;
-        data: MetadataDiscoveryResponse;
+        data: GraphData;
       }>(url, connectionConfig);
       
       if (response.data.success) {
-        return this.transformOracleMetadataToGraph(response.data.data);
+        return response.data.data;
       } else {
-        throw new Error(response.data.message || 'Failed to fetch Oracle metadata');
+        throw new Error(response.data.message || 'Failed to fetch Oracle graph data');
       }
     } catch (error) {
       console.error('Error fetching Oracle graph data:', error);
@@ -91,10 +91,11 @@ export class GraphApiService {
     }
   }
 
-  /**
-   * Transform Oracle metadata response to graph data structure
-   */
+  // Legacy method - now deprecated as graph transformation is handled by backend
+  // Kept for backward compatibility
   private static transformOracleMetadataToGraph(metadata: MetadataDiscoveryResponse): GraphData {
+    console.warn('transformOracleMetadataToGraph is deprecated. Use the new graph API endpoints.');
+    
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
 
@@ -277,6 +278,145 @@ export class GraphApiService {
     } catch (error) {
       console.error('Error checking Oracle discovery service health:', error);
       return false;
+    }
+  }
+
+  /**
+   * Fetch graph data for a specific table
+   */
+  static async fetchTableGraphData(
+    connectionId: string,
+    tableName: string,
+    connectionConfig: OracleConnectionConfig,
+    options?: {
+      owner?: string;
+      includeColumns?: boolean;
+      includeConstraints?: boolean;
+    }
+  ): Promise<GraphData> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (options?.owner) {
+        params.append('owner', options.owner);
+      }
+      params.append('includeColumns', String(options?.includeColumns ?? true));
+      params.append('includeConstraints', String(options?.includeConstraints ?? true));
+
+      const url = `${this.ORACLE_DISCOVERY_BASE}/graph/table/${connectionId}/${tableName}?${params.toString()}`;
+      
+      const response = await axios.post<{
+        success: boolean;
+        message: string;
+        data: GraphData;
+      }>(url, connectionConfig);
+      
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch table graph data');
+      }
+    } catch (error) {
+      console.error('Error fetching table graph data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Discover and transform metadata to graph in a single call
+   */
+  static async discoverGraphData(
+    connectionId: string,
+    connectionConfig: OracleConnectionConfig,
+    discoveryRequest: {
+      schemas?: string[];
+      tablePatterns?: string[];
+      tableTypes?: string[];
+      includeTables?: boolean;
+      includeColumns?: boolean;
+      includeProcedures?: boolean;
+      includeConstraints?: boolean;
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<GraphData> {
+    try {
+      const requestBody = {
+        connectionConfig,
+        discoveryRequest: {
+          connectionId,
+          ...discoveryRequest
+        }
+      };
+
+      const response = await axios.post<{
+        success: boolean;
+        message: string;
+        data: GraphData;
+      }>(`${this.ORACLE_DISCOVERY_BASE}/graph/connections/${connectionId}/discover`, requestBody);
+      
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to discover graph data');
+      }
+    } catch (error) {
+      console.error('Error discovering graph data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get graph metadata/statistics without full graph data
+   */
+  static async getGraphMetadata(
+    connectionId: string,
+    connectionConfig: OracleConnectionConfig,
+    options?: {
+      schemas?: string[];
+      tablePatterns?: string[];
+      tableTypes?: string[];
+    }
+  ): Promise<{
+    totalNodes: number;
+    totalEdges: number;
+    nodeTypeBreakdown: Record<string, number>;
+    edgeTypeBreakdown: Record<string, number>;
+  }> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (options?.schemas) {
+        options.schemas.forEach(schema => params.append('schemas', schema));
+      }
+      if (options?.tablePatterns) {
+        options.tablePatterns.forEach(pattern => params.append('tablePatterns', pattern));
+      }
+      if (options?.tableTypes) {
+        options.tableTypes.forEach(type => params.append('tableTypes', type));
+      }
+
+      const url = `${this.ORACLE_DISCOVERY_BASE}/graph/metadata/${connectionId}?${params.toString()}`;
+      
+      const response = await axios.post<{
+        success: boolean;
+        message: string;
+        data: {
+          totalNodes: number;
+          totalEdges: number;
+          nodeTypeBreakdown: Record<string, number>;
+          edgeTypeBreakdown: Record<string, number>;
+        };
+      }>(url, connectionConfig);
+      
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch graph metadata');
+      }
+    } catch (error) {
+      console.error('Error fetching graph metadata:', error);
+      throw error;
     }
   }
 }

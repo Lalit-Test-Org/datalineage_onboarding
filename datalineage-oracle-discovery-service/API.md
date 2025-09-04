@@ -240,5 +240,250 @@ Common error codes:
 - `CONNECTION_ERROR`: Connection configuration error
 - `SQL_ERROR`: SQL execution error
 - `DISCOVERY_ERROR`: General discovery error
+- `GRAPH_ERROR`: Graph transformation error
 - `ID_MISMATCH`: Connection ID mismatch
 - `VALIDATION_ERROR`: Request validation failed
+
+## Graph API Endpoints
+
+### 5. Get Schema Graph
+**POST** `/graph/schema/{connectionId}`
+
+Returns metadata transformed into graph format for visualization, including all schema objects.
+
+**Path Parameters:**
+- `connectionId`: Unique identifier for the connection
+
+**Query Parameters:**
+- `schemas`: Comma-separated list of schema names to include
+- `tablePatterns`: Comma-separated list of table name patterns
+- `tableTypes`: Comma-separated list of table types
+- `includeTables`: Include table metadata (default: true)
+- `includeColumns`: Include column metadata (default: true)
+- `includeProcedures`: Include procedure metadata (default: true)
+- `includeConstraints`: Include constraint metadata (default: true)
+- `limit`: Maximum number of results (default: 1000)
+- `offset`: Number of results to skip (default: 0)
+
+**Request Body:**
+```json
+{
+  "connectionId": "oracle-prod-01",
+  "host": "oracle.company.com",
+  "port": 1521,
+  "serviceName": "PROD",
+  "username": "metadata_user",
+  "password": "secure_password",
+  "authenticationType": "DIRECT"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Schema graph generated successfully",
+  "data": {
+    "nodes": [
+      {
+        "id": "schema-oracle-prod-01",
+        "label": "Schema (oracle-prod-01)",
+        "type": "schema",
+        "metadata": {
+          "connectionId": "oracle-prod-01",
+          "type": "Oracle Schema"
+        }
+      },
+      {
+        "id": "table-123",
+        "label": "HR.EMPLOYEES",
+        "type": "table",
+        "metadata": {
+          "owner": "HR",
+          "tableName": "EMPLOYEES",
+          "tableType": "TABLE",
+          "fullName": "HR.EMPLOYEES",
+          "type": "Oracle Table"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "schema-table-123",
+        "source": "schema-oracle-prod-01",
+        "target": "table-123",
+        "type": "contains",
+        "metadata": {
+          "relationship": "schema contains table"
+        }
+      }
+    ],
+    "statistics": {
+      "totalNodes": 15,
+      "totalEdges": 18,
+      "nodeTypeBreakdown": {
+        "schema": 1,
+        "table": 5,
+        "column": 8,
+        "constraint": 1
+      },
+      "edgeTypeBreakdown": {
+        "contains": 13,
+        "relationship": 4,
+        "foreign_key": 1
+      }
+    }
+  }
+}
+```
+
+### 6. Get Table Graph
+**POST** `/graph/table/{connectionId}/{tableName}`
+
+Returns graph data focused on a specific table and its related objects.
+
+**Path Parameters:**
+- `connectionId`: Unique identifier for the connection
+- `tableName`: Name of the table to focus on
+
+**Query Parameters:**
+- `owner`: Schema owner of the table (optional)
+- `includeColumns`: Include column metadata (default: true)
+- `includeConstraints`: Include constraint metadata (default: true)
+
+**Request Body:**
+```json
+{
+  "connectionId": "oracle-prod-01",
+  "host": "oracle.company.com",
+  "port": 1521,
+  "serviceName": "PROD",
+  "username": "metadata_user",
+  "password": "secure_password",
+  "authenticationType": "DIRECT"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Table graph generated successfully",
+  "data": {
+    "nodes": [...],
+    "edges": [...],
+    "statistics": {...}
+  }
+}
+```
+
+### 7. Discover Graph Data
+**POST** `/graph/connections/{connectionId}/discover`
+
+Discovers and transforms metadata to graph format in a single call.
+
+**Path Parameters:**
+- `connectionId`: Unique identifier for the connection
+
+**Request Body:**
+```json
+{
+  "connectionConfig": {
+    "connectionId": "oracle-prod-01",
+    "host": "oracle.company.com",
+    "port": 1521,
+    "serviceName": "PROD",
+    "username": "metadata_user",
+    "password": "secure_password",
+    "authenticationType": "DIRECT"
+  },
+  "discoveryRequest": {
+    "connectionId": "oracle-prod-01",
+    "schemas": ["HR"],
+    "includeTables": true,
+    "includeColumns": true,
+    "includeProcedures": true,
+    "includeConstraints": true,
+    "limit": 1000,
+    "offset": 0
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Graph discovery completed successfully",
+  "data": {
+    "nodes": [...],
+    "edges": [...],
+    "statistics": {...}
+  }
+}
+```
+
+### 8. Get Graph Metadata
+**POST** `/graph/metadata/{connectionId}`
+
+Returns graph statistics and metadata breakdown without the full graph data.
+
+**Path Parameters:**
+- `connectionId`: Unique identifier for the connection
+
+**Query Parameters:**
+- `schemas`: Comma-separated list of schema names to include
+- `tablePatterns`: Comma-separated list of table name patterns
+- `tableTypes`: Comma-separated list of table types
+
+**Request Body:**
+```json
+{
+  "connectionId": "oracle-prod-01",
+  "host": "oracle.company.com",
+  "port": 1521,
+  "serviceName": "PROD",
+  "username": "metadata_user",
+  "password": "secure_password",
+  "authenticationType": "DIRECT"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Graph metadata retrieved successfully",
+  "data": {
+    "totalNodes": 25,
+    "totalEdges": 30,
+    "nodeTypeBreakdown": {
+      "schema": 1,
+      "table": 8,
+      "column": 15,
+      "constraint": 1
+    },
+    "edgeTypeBreakdown": {
+      "contains": 24,
+      "relationship": 5,
+      "foreign_key": 1
+    }
+  }
+}
+```
+
+## Graph Data Structure
+
+### Node Types
+- **schema**: Database schema/connection
+- **table**: Database table
+- **column**: Table column
+- **procedure**: Stored procedure
+- **constraint**: Database constraint
+
+### Edge Types
+- **contains**: Parent-child containment relationships
+- **relationship**: General relationships between entities
+- **foreign_key**: Foreign key constraints between tables
+- **references**: Reference relationships
+- **derived_from**: Data derivation relationships
