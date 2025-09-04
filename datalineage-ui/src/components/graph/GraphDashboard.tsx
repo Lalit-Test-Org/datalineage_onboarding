@@ -196,19 +196,19 @@ export const GraphDashboard: React.FC<GraphDashboardProps> = ({ className = '' }
     }
   }, [selectedConnectionId, loadGraphData]);
 
-  const handleNodeClick = (node: GraphNode) => {
+  const handleNodeClick = useCallback((node: GraphNode) => {
     setSelectedNode(node);
     setSelectedEdge(undefined);
     setIsDetailPanelOpen(true);
-  };
+  }, []);
 
-  const handleEdgeClick = (edge: GraphEdge) => {
+  const handleEdgeClick = useCallback((edge: GraphEdge) => {
     setSelectedEdge(edge);
     setSelectedNode(undefined);
     setIsDetailPanelOpen(true);
-  };
+  }, []);
 
-  const handleSelectionChange = (selectedNodes: GraphNode[], selectedEdges: GraphEdge[]) => {
+  const handleSelectionChange = useCallback((selectedNodes: GraphNode[], selectedEdges: GraphEdge[]) => {
     // Handle multiple selections if needed
     if (selectedNodes.length > 0) {
       setSelectedNode(selectedNodes[0]);
@@ -219,7 +219,7 @@ export const GraphDashboard: React.FC<GraphDashboardProps> = ({ className = '' }
       setSelectedNode(undefined);
       setIsDetailPanelOpen(true);
     }
-  };
+  }, []);
 
   const handleCloseDetailPanel = () => {
     setIsDetailPanelOpen(false);
