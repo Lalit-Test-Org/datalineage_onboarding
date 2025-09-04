@@ -178,6 +178,7 @@ export const MetadataDiscoveryPanel: React.FC<MetadataDiscoveryPanelProps> = ({
     }
 
     setIsDiscovering(true);
+
     setDiscoveryError(null);
     setDiscoveryResults(null);
     setDiscoveryStatus(DiscoveryStatus.STARTING);
@@ -352,6 +353,7 @@ export const MetadataDiscoveryPanel: React.FC<MetadataDiscoveryPanelProps> = ({
 
           <div className="form-row">
             <div className="form-group">
+
               <label htmlFor="limit">Limit (max records):</label>
               <input
                 type="number"
