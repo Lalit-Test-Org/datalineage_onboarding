@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  */
 public abstract class BaseEntity {
     
-    @NotBlank
+    @NotNull
     private String id;
     
     @NotNull
