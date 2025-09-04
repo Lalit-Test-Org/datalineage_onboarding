@@ -26,7 +26,11 @@ datalineage_onboarding/
 │   ├── src/main/resources/application.yml
 │   └── pom.xml
 └── datalineage-discovery-service/   # Data discovery service
-    ├── src/main/java/com/datalineage/discovery/
+│   ├── src/main/java/com/datalineage/discovery/
+│   ├── src/main/resources/application.yml
+│   └── pom.xml
+└── datalineage-oracle-discovery-service/   # Oracle metadata discovery service
+    ├── src/main/java/com/datalineage/oracle/discovery/
     ├── src/main/resources/application.yml
     └── pom.xml
 ```
@@ -75,6 +79,23 @@ datalineage_onboarding/
   - Automated data discovery
   - Data profiling
   - Asset cataloging
+
+### 6. Oracle Discovery Service (`datalineage-oracle-discovery-service`)
+- **Purpose**: Dedicated microservice for Oracle database metadata discovery
+- **Port**: 8084
+- **Dependencies**: Spring Boot Web, JPA, H2 Database, Oracle JDBC Driver, Eureka Client
+- **Key Features**:
+  - Direct and Kerberos authentication support
+  - Extracts tables, columns, procedures, and constraints metadata
+  - Queries Oracle system tables (ALL_TABLES, ALL_TAB_COLUMNS, ALL_PROCEDURES, ALL_CONSTRAINTS)
+  - Structured entity models for Oracle metadata
+  - RESTful API for metadata discovery operations
+- **Entity Models**:
+  - `OracleTable`: Table metadata with relationships to columns and constraints
+  - `OracleColumn`: Column metadata with data types, constraints, and statistics
+  - `OracleProcedure`: Stored procedure metadata
+  - `OracleConstraint`: Primary key, foreign key, and check constraint metadata
+  - `OracleConstraintColumn`: Constraint-column relationship mapping
 
 ## Technology Stack
 
