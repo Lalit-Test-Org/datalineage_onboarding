@@ -16,6 +16,7 @@ import java.util.List;
 public class OracleTable extends BaseEntity {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
     
