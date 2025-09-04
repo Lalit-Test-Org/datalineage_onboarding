@@ -102,4 +102,38 @@ class OracleConnectionServiceTest {
         // Verify that close was actually called
         verify(mockConnection, times(1)).close();
     }
+    
+    @Test
+    void testKerberosConnectionDoesNotSetGlobalSystemProperties() {
+        // Capture current system properties before the test
+        String originalRealm = System.getProperty("java.security.krb5.realm");
+        String originalKdc = System.getProperty("java.security.krb5.kdc");
+        
+        OracleConnectionConfig config = new OracleConnectionConfig();
+        config.setConnectionId("test-conn-kerberos");
+        config.setHost("oracleserver.company.com");
+        config.setPort(1521);
+        config.setServiceName("PROD");
+        config.setUsername("user@REALM.COM");
+        config.setAuthenticationType(OracleConnectionConfig.AuthenticationType.KERBEROS);
+        config.setKerberosRealm("TEST.REALM.COM");
+        config.setKerberosKdc("test-kdc.company.com");
+        config.setKerberosPrincipal("user@REALM.COM");
+        
+        // Test that creating Kerberos connection doesn't affect global system properties
+        // Note: This test will fail with LoginException due to invalid credentials,
+        // but the important thing is to verify system properties are not set globally
+        try {
+            connectionService.createConnection(config);
+        } catch (SQLException e) {
+            // Expected to fail due to invalid Kerberos setup, but that's okay for this test
+        }
+        
+        // Verify that system properties were not modified globally
+        String finalRealm = System.getProperty("java.security.krb5.realm");
+        String finalKdc = System.getProperty("java.security.krb5.kdc");
+        
+        assertEquals(originalRealm, finalRealm, "Global java.security.krb5.realm should not be modified");
+        assertEquals(originalKdc, finalKdc, "Global java.security.krb5.kdc should not be modified");
+    }
 }

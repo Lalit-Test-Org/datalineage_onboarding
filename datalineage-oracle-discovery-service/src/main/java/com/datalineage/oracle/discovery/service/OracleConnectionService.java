@@ -1,5 +1,6 @@
 package com.datalineage.oracle.discovery.service;
 
+import com.datalineage.oracle.discovery.config.KerberosConfiguration;
 import com.datalineage.oracle.discovery.dto.OracleConnectionConfig;
 import oracle.jdbc.OracleConnection;
 import org.slf4j.Logger;
@@ -7,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.sql.Connection;
@@ -72,10 +74,16 @@ public class OracleConnectionService {
      * Creates Kerberos Oracle connection
      */
     private Connection createKerberosConnection(OracleConnectionConfig config) throws SQLException {
+        // Store original configuration to restore later
+        Configuration originalConfig = Configuration.getConfiguration();
+        
         try {
-            // Set Kerberos properties
-            System.setProperty("java.security.krb5.realm", config.getKerberosRealm());
-            System.setProperty("java.security.krb5.kdc", config.getKerberosKdc());
+            // Create custom Kerberos configuration without setting global system properties
+            KerberosConfiguration kerberosConfig = new KerberosConfiguration(
+                config.getKerberosRealm(), 
+                config.getKerberosKdc()
+            );
+            Configuration.setConfiguration(kerberosConfig);
             
             // Create login context for Kerberos authentication
             LoginContext loginContext = new LoginContext("OracleKerberos");
@@ -105,6 +113,9 @@ public class OracleConnectionService {
             
         } catch (LoginException e) {
             throw new SQLException("Kerberos authentication failed", e);
+        } finally {
+            // Restore original configuration to avoid affecting other components
+            Configuration.setConfiguration(originalConfig);
         }
     }
     
