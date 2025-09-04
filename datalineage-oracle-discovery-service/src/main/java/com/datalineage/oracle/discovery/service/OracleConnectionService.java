@@ -2,6 +2,8 @@ package com.datalineage.oracle.discovery.service;
 
 import com.datalineage.oracle.discovery.dto.OracleConnectionConfig;
 import oracle.jdbc.OracleConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.Subject;
@@ -17,6 +19,8 @@ import java.util.Properties;
  */
 @Service
 public class OracleConnectionService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(OracleConnectionService.class);
     
     /**
      * Creates Oracle connection based on configuration
@@ -146,7 +150,7 @@ public class OracleConnectionService {
                 connection.close();
             } catch (SQLException e) {
                 // Log error but don't throw
-                System.err.println("Error closing Oracle connection: " + e.getMessage());
+                logger.error("Error closing Oracle connection: {}", e.getMessage());
             }
         }
     }
