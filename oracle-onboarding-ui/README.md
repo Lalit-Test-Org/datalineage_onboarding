@@ -1,46 +1,101 @@
-# Getting Started with Create React App
+# Oracle Database Onboarding UI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React.js frontend application for onboarding Oracle databases to the Data Lineage Discovery Service. This application provides a user-friendly interface for configuring Oracle database connections with support for both Direct and Kerberos authentication.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### 🚀 Comprehensive Oracle Database Onboarding
+- **Direct Authentication**: Username/password-based connections
+- **Kerberos Authentication**: Enterprise-grade security with realm, KDC, principal, and keytab configuration
+- **Connection Testing**: Real-time validation of database connectivity
+- **Advanced Configuration**: SSL, timeouts, and metadata discovery options
 
-### `npm start`
+### 🎨 Modern User Interface
+- **Responsive Design**: Mobile-friendly interface that works on all devices
+- **Tab-based Navigation**: Separate views for onboarding and connection management
+- **Form Validation**: Client-side validation with user-friendly error messages
+- **Visual Feedback**: Loading states, success/error notifications
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 🔧 Modular Architecture
+- **TypeScript Support**: Type-safe development with comprehensive interfaces
+- **Component-based**: Reusable components for future database types
+- **Service Layer**: Clean API integration with error handling
+- **Utility Functions**: Validation helpers and form utilities
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 🔒 Security Features
+- **Input Sanitization**: XSS protection for all form inputs
+- **Secure Transmission**: Encrypted transmission of credentials to backend
+- **Password Masking**: Secure password fields
+- **Validation**: Comprehensive client-side and server-side validation
 
-### `npm test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js 16+ and npm
+- Data Lineage Discovery Service running on localhost:8083
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Navigate to the UI directory:**
+   ```bash
+   cd oracle-onboarding-ui
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. **Start the development server:**
+   ```bash
+   npm start
+   ```
 
-### `npm run eject`
+4. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Building for Production
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Usage
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Onboarding a New Oracle Database
 
-## Learn More
+1. **Navigate to the "Onboard Database" tab**
+2. **Fill in Basic Information** (Connection Name, Host, Port, Service Name)
+3. **Choose Authentication Type** (Direct or Kerberos)
+4. **Configure Advanced Options** (Optional: SSL, timeouts, metadata discovery)
+5. **Click "Onboard Database"** to submit
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Managing Existing Connections
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. **Navigate to the "Manage Connections" tab**
+2. **View all configured Oracle connections**
+3. **Test, Edit, or Delete** connections as needed
+
+## API Integration
+
+Communicates with Data Lineage Discovery Service API at `http://localhost:8083/api/v1/oracle`
+
+## Development
+
+### Available Scripts
+
+- `npm start` - Start development server
+- `npm build` - Build for production
+- `npm test` - Run test suite
+
+### Architecture
+
+The application follows a modular architecture to support future database types:
+- Components are organized by database type (`src/components/oracle/`)
+- TypeScript interfaces ensure type safety (`src/types/`)
+- Service layer handles API communication (`src/services/`)
+- Utility functions provide validation and helpers (`src/utils/`)
+
+## Screenshots
+
+The UI provides intuitive forms for both Direct and Kerberos authentication, with comprehensive validation and error handling.
