@@ -33,8 +33,7 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Default configuration
   const defaultConfig: GraphConfig = useMemo(() => ({
     layout: {
-      name: 'cose',
-      animate: false, // Disable animation to prevent timing issues
+      animate: false, // Disable animation to address Cytoscape lifecycle race condition (see PR description)
       fit: true,
       padding: 30
     },
