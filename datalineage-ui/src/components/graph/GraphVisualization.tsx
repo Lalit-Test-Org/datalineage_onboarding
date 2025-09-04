@@ -33,6 +33,7 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   // Default configuration
   const defaultConfig: GraphConfig = useMemo(() => ({
     layout: {
+      name: 'cose', // Add required layout name
       animate: false, // Disable animation to address Cytoscape lifecycle race condition (see PR description)
       fit: true,
       padding: 30
@@ -366,6 +367,8 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     return () => {
       if (cyRef.current) {
         try {
+          // Remove all event listeners to prevent memory leaks
+          cyRef.current.removeAllListeners();
           // Stop any running layouts
           cyRef.current.stop();
           // Destroy the instance

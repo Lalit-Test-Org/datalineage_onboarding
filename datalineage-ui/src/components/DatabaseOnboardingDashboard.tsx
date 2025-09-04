@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OracleOnboardingForm } from './oracle/OracleOnboardingForm';
 import { OracleConnectionList } from './oracle/OracleConnectionList';
+import { MetadataDiscoveryPanel } from './oracle/MetadataDiscoveryPanel';
 import { GraphDashboard } from './graph/GraphDashboard';
 import { OracleConnection } from '../types/oracle';
+import { OracleApiService } from '../services/oracleApi';
 import './DatabaseOnboardingDashboard.css';
 
 interface DashboardTab {
@@ -14,12 +16,30 @@ interface DashboardTab {
 export const DatabaseOnboardingDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('onboard');
   const [refreshConnections, setRefreshConnections] = useState<boolean>(false);
+  const [connections, setConnections] = useState<OracleConnection[]>([]);
+
+  // Load connections for the discovery panel
+  const loadConnections = async () => {
+    try {
+      const response = await OracleApiService.getConnections();
+      setConnections(response.data);
+    } catch (error) {
+      console.error('Failed to load connections:', error);
+      setConnections([]);
+    }
+  };
+
+  useEffect(() => {
+    loadConnections();
+  }, []);
 
   const handleOnboardingSuccess = (connection: OracleConnection) => {
     console.log('Successfully onboarded connection:', connection);
     // Switch to connections tab and refresh the list
     setActiveTab('connections');
     setRefreshConnections(true);
+    // Also refresh the connections for discovery panel
+    loadConnections();
   };
 
   const handleConnectionEdit = (connection: OracleConnection) => {
@@ -33,8 +53,16 @@ export const DatabaseOnboardingDashboard: React.FC = () => {
     // The test is handled in the component, this is just for logging
   };
 
+  const handleConnectionSelect = (connection: OracleConnection) => {
+    console.log('Selected connection for discovery:', connection);
+    // Switch to discovery tab
+    setActiveTab('discovery');
+  };
+
   const handleRefreshComplete = () => {
     setRefreshConnections(false);
+    // Also refresh the connections for discovery panel
+    loadConnections();
   };
 
   const tabs: DashboardTab[] = [
@@ -56,6 +84,16 @@ export const DatabaseOnboardingDashboard: React.FC = () => {
           onTest={handleConnectionTest}
           refresh={refreshConnections}
           onRefreshComplete={handleRefreshComplete}
+        />
+      )
+    },
+    {
+      id: 'discovery',
+      label: 'Metadata Discovery',
+      component: (
+        <MetadataDiscoveryPanel
+          connections={connections}
+          onConnectionSelect={handleConnectionSelect}
         />
       )
     },

@@ -1,0 +1,250 @@
+.metadata-discovery-status {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  background: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.metadata-discovery-status.running {
+  border-color: #ffa726;
+  background: #fff3e0;
+}
+
+.metadata-discovery-status.completed {
+  border-color: #66bb6a;
+  background: #e8f5e8;
+}
+
+.metadata-discovery-status.failed {
+  border-color: #ef5350;
+  background: #ffebee;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.status-icon {
+  font-size: 2em;
+  min-width: 50px;
+  text-align: center;
+}
+
+.status-icon.running {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-info h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.connection-name {
+  font-size: 0.9em;
+  color: #666;
+  margin: 0 0 5px 0;
+  font-style: italic;
+}
+
+.status-text {
+  margin: 0;
+  color: #555;
+  font-weight: 500;
+}
+
+.progress-indicator {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255, 167, 38, 0.1);
+  border-radius: 6px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffa726, #ff9800);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill:not([style*="width"]) {
+  animation: progress 2s infinite;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress-indicator p {
+  margin: 0;
+  color: #795548;
+  font-size: 0.9em;
+}
+
+.progress-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.progress-message {
+  margin: 0;
+  color: #795548;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.progress-info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.progress-percentage {
+  font-weight: bold;
+  color: #ff9800;
+  font-size: 0.9em;
+}
+
+.time-remaining {
+  font-size: 0.8em;
+  color: #999;
+  font-style: italic;
+}
+
+.error-details {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(239, 83, 80, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid #ef5350;
+}
+
+.error-details h4 {
+  margin: 0 0 10px 0;
+  color: #d32f2f;
+  font-size: 1em;
+}
+
+.error-message {
+  margin: 0;
+  color: #c62828;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.discovery-summary {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(102, 187, 106, 0.1);
+  border-radius: 6px;
+  border-left: 4px solid #66bb6a;
+}
+
+.discovery-summary h4 {
+  margin: 0 0 15px 0;
+  color: #2e7d32;
+  font-size: 1em;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.summary-item {
+  text-align: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+.summary-item:hover {
+  transform: translateY(-2px);
+}
+
+.summary-count {
+  display: block;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 5px;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.9em;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.discovery-time {
+  text-align: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .status-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .metadata-discovery-status {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

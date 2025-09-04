@@ -108,7 +108,7 @@ export const GraphDashboard: React.FC<GraphDashboardProps> = ({ className = '' }
         port: connection.port,
         serviceName: connection.serviceName,
         username: connection.username || 'unknown',
-        password: connection.password || '', // Retrieve password securely
+        password: '', // Password not stored in connection for security
         authenticationType: 'BASIC'
       };
 
