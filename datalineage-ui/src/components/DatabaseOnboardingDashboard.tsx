@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { OracleOnboardingForm } from './oracle/OracleOnboardingForm';
 import { OracleConnectionList } from './oracle/OracleConnectionList';
 import { MetadataDiscoveryPanel } from './oracle/MetadataDiscoveryPanel';
+import { GraphDashboard } from './graph/GraphDashboard';
 import { OracleConnection } from '../types/oracle';
 import { OracleApiService } from '../services/oracleApi';
 import './DatabaseOnboardingDashboard.css';
@@ -94,6 +95,13 @@ export const DatabaseOnboardingDashboard: React.FC = () => {
           connections={connections}
           onConnectionSelect={handleConnectionSelect}
         />
+      )
+    },
+    {
+      id: 'graph',
+      label: 'Graph Visualization',
+      component: (
+        <GraphDashboard />
       )
     }
   ];

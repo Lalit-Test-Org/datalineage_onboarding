@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { OracleConnection, DiscoveryStatus, MetadataDiscoveryResponse, MetadataDiscoveryRequest, DiscoveryProgress, AuthenticationType } from '../../types/oracle';
-import { OracleApiService } from '../../services/oracleApi';
+import { OracleConnection, DiscoveryStatus, MetadataDiscoveryResponse, DiscoveryProgress, AuthenticationType } from '../../types/oracle';
 import { MetadataDiscoveryStatus } from './MetadataDiscoveryStatus';
 import { MetadataDiscoveryResults } from './MetadataDiscoveryResults';
 import './MetadataDiscoveryPanel.css';
@@ -18,292 +17,264 @@ export const MetadataDiscoveryPanel: React.FC<MetadataDiscoveryPanelProps> = ({
   const demoConnections: OracleConnection[] = connections.length > 0 ? connections : [
     {
       id: 'demo-oracle-01',
-      connectionName: 'Demo Oracle Production',
-      description: 'Demo Oracle database for testing',
-      host: 'oracle-prod.company.com',
+      connectionName: 'Sample Oracle DB (localhost:1521)',
+      description: 'Demo Oracle Database connection',
+      host: 'localhost',
       port: 1521,
-      serviceName: 'PROD',
-      authenticationType: AuthenticationType.DIRECT,
+      serviceName: 'XEPDB1',
       username: 'demo_user',
+      authenticationType: AuthenticationType.DIRECT,
       status: 'ACTIVE',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    {
-      id: 'demo-oracle-02',
-      connectionName: 'Demo Oracle Development',
-      description: 'Demo Oracle development database',
-      host: 'oracle-dev.company.com',
-      port: 1521,
-      serviceName: 'DEV',
-      authenticationType: AuthenticationType.KERBEROS,
-      status: 'ACTIVE',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastTestedAt: new Date().toISOString(),
+      lastTestResult: 'SUCCESS'
     }
   ];
 
+  // State for discovery form
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
+  const [schemas, setSchemas] = useState<string>('');
+  const [tablePatterns, setTablePatterns] = useState<string>('');
+  const [includeTables, setIncludeTables] = useState<boolean>(true);
+  const [includeColumns, setIncludeColumns] = useState<boolean>(true);
+  const [includeProcedures, setIncludeProcedures] = useState<boolean>(false);
+  const [includeConstraints, setIncludeConstraints] = useState<boolean>(false);
+  const [limit, setLimit] = useState<number>(100);
+  const [offset, setOffset] = useState<number>(0);
+
+  // State for discovery process
+  const [isDiscovering, setIsDiscovering] = useState<boolean>(false);
   const [discoveryStatus, setDiscoveryStatus] = useState<DiscoveryStatus>(DiscoveryStatus.IDLE);
   const [discoveryProgress, setDiscoveryProgress] = useState<DiscoveryProgress | null>(null);
   const [discoveryResults, setDiscoveryResults] = useState<MetadataDiscoveryResponse | null>(null);
-  const [error, setError] = useState<string>('');
-  const [isDiscovering, setIsDiscovering] = useState<boolean>(false);
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
+
+  // Progress simulation
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [discoveryOptions, setDiscoveryOptions] = useState<Partial<MetadataDiscoveryRequest>>({
-    schemas: [],
-    tablePatterns: [],
-    includeTables: true,
-    includeColumns: true,
-    includeProcedures: true,
-    includeConstraints: true,
-    limit: 1000,
-    offset: 0
-  });
 
-  const selectedConnection = demoConnections.find(conn => conn.id === selectedConnectionId);
+  const simulateProgress = useCallback(() => {
+    const steps = [
+      { status: DiscoveryStatus.STARTING, message: 'Initializing discovery process...', duration: 2000 },
+      { status: DiscoveryStatus.CONNECTING, message: 'Connecting to Oracle database...', duration: 3000 },
+      { status: DiscoveryStatus.DISCOVERING_TABLES, message: 'Discovering tables and views...', duration: 8000 },
+      { status: DiscoveryStatus.DISCOVERING_COLUMNS, message: 'Analyzing column metadata...', duration: 6000 },
+      { status: DiscoveryStatus.DISCOVERING_PROCEDURES, message: 'Scanning stored procedures...', duration: 4000 },
+      { status: DiscoveryStatus.DISCOVERING_CONSTRAINTS, message: 'Mapping constraints and relationships...', duration: 5000 },
+      { status: DiscoveryStatus.FINALIZING, message: 'Finalizing metadata collection...', duration: 2000 }
+    ];
 
-  // Cleanup progress interval on unmount
-  useEffect(() => {
-    const intervalRef = progressIntervalRef.current;
-    return () => {
-      if (intervalRef) {
-        clearInterval(intervalRef);
-      }
-    };
-  }, []);
+    let stepIndex = 0;
+    const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
+    let elapsedTime = 0;
 
-  // Simulate progress steps for better user feedback
-  const simulateDiscoveryProgress = useCallback((startTime: number): Promise<void> => {
-    return new Promise((resolve) => {
-      const progressSteps = [
-        { status: DiscoveryStatus.STARTING, progress: 0, message: 'Initializing discovery process...', duration: 500 },
-        { status: DiscoveryStatus.CONNECTING, progress: 10, message: 'Establishing database connection...', duration: 1000 },
-        { status: DiscoveryStatus.DISCOVERING_TABLES, progress: 25, message: 'Discovering tables and views...', duration: 2000 },
-        { status: DiscoveryStatus.DISCOVERING_COLUMNS, progress: 50, message: 'Analyzing column metadata...', duration: 2500 },
-        { status: DiscoveryStatus.DISCOVERING_PROCEDURES, progress: 75, message: 'Scanning procedures and functions...', duration: 1500 },
-        { status: DiscoveryStatus.DISCOVERING_CONSTRAINTS, progress: 90, message: 'Extracting constraint information...', duration: 1000 },
-        { status: DiscoveryStatus.FINALIZING, progress: 95, message: 'Finalizing metadata compilation...', duration: 500 }
-      ];
-
-      let currentStepIndex = 0;
-
-      const updateProgress = () => {
-        if (currentStepIndex >= progressSteps.length) {
-          resolve();
-          return;
-        }
-
-        const step = progressSteps[currentStepIndex];
-        const elapsed = Date.now() - startTime;
-        const estimatedTotal = 8000; // 8 seconds estimated total
-        const estimatedRemaining = Math.max(0, estimatedTotal - elapsed);
-
-        setDiscoveryStatus(step.status);
+    const updateProgress = () => {
+      if (stepIndex < steps.length) {
+        const currentStep = steps[stepIndex];
+        elapsedTime += 500; // Update every 500ms
+        
+        const stepProgress = Math.min(elapsedTime, currentStep.duration) / currentStep.duration;
+        const overallProgress = ((stepIndex + stepProgress) / steps.length) * 100;
+        
+        setDiscoveryStatus(currentStep.status);
         setDiscoveryProgress({
-          currentStep: step.status,
-          progress: step.progress,
-          message: step.message,
-          estimatedTimeRemaining: estimatedRemaining,
-          startedAt: new Date(startTime).toISOString()
+          currentStep: currentStep.status,
+          progress: Math.round(overallProgress),
+          message: currentStep.message,
+          estimatedTimeRemaining: totalDuration - elapsedTime,
+          startedAt: new Date().toISOString()
         });
 
-        currentStepIndex++;
-        setTimeout(updateProgress, step.duration);
-      };
+        if (elapsedTime >= currentStep.duration) {
+          stepIndex++;
+          elapsedTime = 0;
+        }
 
-      updateProgress();
-    });
-  }, []);
+        if (stepIndex >= steps.length) {
+          // Discovery completed
+          setDiscoveryStatus(DiscoveryStatus.COMPLETED);
+          setIsDiscovering(false);
+          
+          // Generate mock results
+          const mockResults: MetadataDiscoveryResponse = {
+            connectionId: selectedConnectionId,
+            tables: [
+              {
+                id: 'table-1',
+                owner: 'DEMO_SCHEMA',
+                tableName: 'EMPLOYEES',
+                tableType: 'TABLE',
+                tablespace: 'USERS',
+                numRows: 107,
+                status: 'VALID',
+                comments: 'Employee information table',
+                oracleConnectionId: selectedConnectionId
+              },
+              {
+                id: 'table-2',
+                owner: 'DEMO_SCHEMA',
+                tableName: 'DEPARTMENTS',
+                tableType: 'TABLE',
+                tablespace: 'USERS',
+                numRows: 27,
+                status: 'VALID',
+                comments: 'Department information table',
+                oracleConnectionId: selectedConnectionId
+              }
+            ],
+            columns: [
+              {
+                id: 'col-1',
+                owner: 'DEMO_SCHEMA',
+                tableName: 'EMPLOYEES',
+                columnName: 'EMPLOYEE_ID',
+                dataType: 'NUMBER',
+                dataPrecision: 6,
+                dataScale: 0,
+                nullable: 'N',
+                columnId: 1,
+                comments: 'Primary key',
+                oracleConnectionId: selectedConnectionId
+              },
+              {
+                id: 'col-2',
+                owner: 'DEMO_SCHEMA',
+                tableName: 'EMPLOYEES',
+                columnName: 'FIRST_NAME',
+                dataType: 'VARCHAR2',
+                dataLength: 20,
+                nullable: 'Y',
+                columnId: 2,
+                comments: 'Employee first name',
+                oracleConnectionId: selectedConnectionId
+              }
+            ],
+            statistics: {
+              totalTables: 2,
+              totalColumns: 15,
+              totalProcedures: 0,
+              totalConstraints: 0,
+              discoveryTimeMs: totalDuration
+            }
+          };
 
-  const handleDiscoveryStart = useCallback(async () => {
+          setDiscoveryResults(mockResults);
+          
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
+        }
+      }
+    };
+
+    progressIntervalRef.current = setInterval(updateProgress, 500);
+  }, [selectedConnectionId]);
+
+  const handleStartDiscovery = useCallback(async () => {
     if (!selectedConnectionId) {
-      setError('Please select a connection first');
+      setDiscoveryError('Please select a connection');
       return;
     }
 
     setIsDiscovering(true);
-    setDiscoveryStatus(DiscoveryStatus.STARTING);
-    setError('');
-    setDiscoveryResults(null);
-    setDiscoveryProgress(null);
 
-    const startTime = Date.now();
+    setDiscoveryError(null);
+    setDiscoveryResults(null);
+    setDiscoveryStatus(DiscoveryStatus.STARTING);
+
+    // Build discovery request
+    // const discoveryRequest: Partial<MetadataDiscoveryRequest> = {
+    //   schemas: schemas ? schemas.split(',').map(s => s.trim()) : undefined,
+    //   tablePatterns: tablePatterns ? tablePatterns.split(',').map(s => s.trim()) : undefined,
+    //   includeTables,
+    //   includeColumns,
+    //   includeProcedures,
+    //   includeConstraints,
+    //   limit,
+    //   offset
+    // };
 
     try {
-      // Start the progress simulation
-      const progressPromise = simulateDiscoveryProgress(startTime);
+      // Start progress simulation
+      simulateProgress();
+
+      // For demo purposes, we're using the simulation
+      // In a real implementation, you would call:
+      // const response = await OracleApiService.discoverMetadata(selectedConnectionId, discoveryRequest);
+      // setDiscoveryResults(response.data);
       
-      // For demo purposes, create mock discovery results
-      const demoResults: MetadataDiscoveryResponse = {
-        connectionId: selectedConnectionId,
-        tables: [
-          {
-            id: 'table-1',
-            owner: 'HR',
-            tableName: 'EMPLOYEES',
-            tableType: 'TABLE',
-            tablespace: 'USERS',
-            numRows: 107,
-            status: 'VALID',
-            comments: 'Employee information table',
-            oracleConnectionId: selectedConnectionId
-          },
-          {
-            id: 'table-2', 
-            owner: 'HR',
-            tableName: 'DEPARTMENTS',
-            tableType: 'TABLE',
-            tablespace: 'USERS',
-            numRows: 27,
-            status: 'VALID',
-            comments: 'Department information',
-            oracleConnectionId: selectedConnectionId
-          }
-        ],
-        columns: [
-          {
-            id: 'col-1',
-            owner: 'HR',
-            tableName: 'EMPLOYEES',
-            columnName: 'EMPLOYEE_ID',
-            dataType: 'NUMBER',
-            dataLength: 22,
-            dataPrecision: 6,
-            nullable: 'N',
-            columnId: 1,
-            comments: 'Unique employee identifier',
-            oracleConnectionId: selectedConnectionId
-          },
-          {
-            id: 'col-2',
-            owner: 'HR', 
-            tableName: 'EMPLOYEES',
-            columnName: 'FIRST_NAME',
-            dataType: 'VARCHAR2',
-            dataLength: 20,
-            nullable: 'Y',
-            columnId: 2,
-            comments: 'Employee first name',
-            oracleConnectionId: selectedConnectionId
-          }
-        ],
-        procedures: [
-          {
-            id: 'proc-1',
-            owner: 'HR',
-            objectName: 'GET_EMPLOYEE',
-            objectType: 'PROCEDURE',
-            status: 'VALID',
-            oracleConnectionId: selectedConnectionId
-          }
-        ],
-        constraints: [
-          {
-            id: 'cons-1',
-            owner: 'HR',
-            constraintName: 'EMP_EMP_ID_PK',
-            constraintType: 'P',
-            tableName: 'EMPLOYEES',
-            status: 'ENABLED',
-            oracleConnectionId: selectedConnectionId
-          }
-        ],
-        statistics: {
-          totalTables: 2,
-          totalColumns: 2,
-          totalProcedures: 1,
-          totalConstraints: 1,
-          discoveryTimeMs: 8250
-        }
-      };
-      
-      // Start the actual discovery (or use demo results)
-      let discoveryPromise: Promise<void>;
-      
-      if (selectedConnectionId.startsWith('demo-')) {
-        // Use demo results for demo connections
-        discoveryPromise = new Promise(resolve => {
-          setTimeout(() => {
-            setDiscoveryResults(demoResults);
-            resolve();
-          }, 8000); // Match the progress simulation time
-        });
-      } else {
-        // Use real API for actual connections
-        discoveryPromise = OracleApiService.discoverMetadata(selectedConnectionId, discoveryOptions)
-          .then(response => {
-            setDiscoveryResults(response.data);
-          });
-      }
-      
-      // Wait for both to complete
-      await Promise.all([progressPromise, discoveryPromise]);
-      
-      setDiscoveryStatus(DiscoveryStatus.COMPLETED);
-      setDiscoveryProgress({
-        currentStep: DiscoveryStatus.COMPLETED,
-        progress: 100,
-        message: 'Discovery completed successfully!',
-        startedAt: new Date(startTime).toISOString()
-      });
-    } catch (err: any) {
-      setError(err.message || 'Failed to discover metadata');
-      setDiscoveryStatus(DiscoveryStatus.FAILED);
-      setDiscoveryProgress({
-        currentStep: DiscoveryStatus.FAILED,
-        progress: 0,
-        message: 'Discovery failed: ' + (err.message || 'Unknown error'),
-        startedAt: new Date(startTime).toISOString()
-      });
-    } finally {
+    } catch (error: any) {
       setIsDiscovering(false);
+      setDiscoveryStatus(DiscoveryStatus.FAILED);
+      setDiscoveryError(error.message || 'Discovery failed');
+      
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
-  }, [selectedConnectionId, discoveryOptions, simulateDiscoveryProgress]);
+  }, [selectedConnectionId, simulateProgress]);
 
-  const handleRetry = () => {
-    setDiscoveryStatus(DiscoveryStatus.IDLE);
-    setError('');
-    setDiscoveryResults(null);
-    setDiscoveryProgress(null);
+  const handleStopDiscovery = useCallback(() => {
     setIsDiscovering(false);
-  };
+    setDiscoveryStatus(DiscoveryStatus.IDLE);
+    setDiscoveryProgress(null);
+    
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  }, []);
 
-  const handleOptionsChange = (field: keyof MetadataDiscoveryRequest, value: any) => {
-    setDiscoveryOptions(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  const handleResetForm = useCallback(() => {
+    setSelectedConnectionId('');
+    setSchemas('');
+    setTablePatterns('');
+    setIncludeTables(true);
+    setIncludeColumns(true);
+    setIncludeProcedures(false);
+    setIncludeConstraints(false);
+    setLimit(100);
+    setOffset(0);
+    setDiscoveryResults(null);
+    setDiscoveryError(null);
+    setDiscoveryStatus(DiscoveryStatus.IDLE);
+    setDiscoveryProgress(null);
+  }, []);
 
-  const handleArrayInputChange = (field: 'schemas' | 'tablePatterns', value: string) => {
-    const arrayValue = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    handleOptionsChange(field, arrayValue);
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="metadata-discovery-panel">
       <div className="panel-header">
-        <h2>Oracle Metadata Discovery</h2>
-        <p>Discover and explore metadata from your Oracle database connections</p>
+        <h2>Metadata Discovery</h2>
+        <p>Discover and analyze database metadata from your Oracle connections</p>
       </div>
 
       <div className="discovery-form">
         <div className="form-section">
           <h3>Connection Selection</h3>
           <div className="form-group">
-            <label htmlFor="connectionSelect">Select Oracle Connection:</label>
+            <label htmlFor="connection-select">Select Oracle Connection:</label>
             <select
-              id="connectionSelect"
+              id="connection-select"
+              className="connection-select"
               value={selectedConnectionId}
               onChange={(e) => setSelectedConnectionId(e.target.value)}
-              className="connection-select"
               disabled={isDiscovering}
             >
               <option value="">-- Select a connection --</option>
               {demoConnections.map((connection) => (
                 <option key={connection.id} value={connection.id}>
-                  {connection.connectionName} ({connection.host}:{connection.port}/{connection.serviceName})
+                  {connection.connectionName}
                 </option>
               ))}
             </select>
@@ -312,161 +283,146 @@ export const MetadataDiscoveryPanel: React.FC<MetadataDiscoveryPanelProps> = ({
 
         <div className="form-section">
           <h3>Discovery Options</h3>
-          
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="schemas">Schemas (comma-separated):</label>
               <input
                 type="text"
                 id="schemas"
-                placeholder="e.g., HR, SALES, FINANCE"
-                value={discoveryOptions.schemas?.join(', ') || ''}
-                onChange={(e) => handleArrayInputChange('schemas', e.target.value)}
+                value={schemas}
+                onChange={(e) => setSchemas(e.target.value)}
+                placeholder="e.g., DEMO_SCHEMA, HR, SALES"
                 disabled={isDiscovering}
               />
             </div>
-            
             <div className="form-group">
-              <label htmlFor="tablePatterns">Table Patterns (comma-separated):</label>
+              <label htmlFor="table-patterns">Table Patterns (comma-separated):</label>
               <input
                 type="text"
-                id="tablePatterns"
-                placeholder="e.g., EMP%, DEPT%, USER_*"
-                value={discoveryOptions.tablePatterns?.join(', ') || ''}
-                onChange={(e) => handleArrayInputChange('tablePatterns', e.target.value)}
+                id="table-patterns"
+                value={tablePatterns}
+                onChange={(e) => setTablePatterns(e.target.value)}
+                placeholder="e.g., EMP%, DEPT%, %_LOG"
                 disabled={isDiscovering}
               />
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={discoveryOptions.includeTables || false}
-                  onChange={(e) => handleOptionsChange('includeTables', e.target.checked)}
-                  disabled={isDiscovering}
-                />
-                Include Tables
-              </label>
+          <div className="form-row quad">
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="include-tables"
+                checked={includeTables}
+                onChange={(e) => setIncludeTables(e.target.checked)}
+                disabled={isDiscovering}
+              />
+              <label htmlFor="include-tables">Include Tables</label>
             </div>
-            
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={discoveryOptions.includeColumns || false}
-                  onChange={(e) => handleOptionsChange('includeColumns', e.target.checked)}
-                  disabled={isDiscovering}
-                />
-                Include Columns
-              </label>
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="include-columns"
+                checked={includeColumns}
+                onChange={(e) => setIncludeColumns(e.target.checked)}
+                disabled={isDiscovering}
+              />
+              <label htmlFor="include-columns">Include Columns</label>
             </div>
-            
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={discoveryOptions.includeProcedures || false}
-                  onChange={(e) => handleOptionsChange('includeProcedures', e.target.checked)}
-                  disabled={isDiscovering}
-                />
-                Include Procedures
-              </label>
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="include-procedures"
+                checked={includeProcedures}
+                onChange={(e) => setIncludeProcedures(e.target.checked)}
+                disabled={isDiscovering}
+              />
+              <label htmlFor="include-procedures">Include Procedures</label>
             </div>
-            
-            <div className="form-group checkbox-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={discoveryOptions.includeConstraints || false}
-                  onChange={(e) => handleOptionsChange('includeConstraints', e.target.checked)}
-                  disabled={isDiscovering}
-                />
-                Include Constraints
-              </label>
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="include-constraints"
+                checked={includeConstraints}
+                onChange={(e) => setIncludeConstraints(e.target.checked)}
+                disabled={isDiscovering}
+              />
+              <label htmlFor="include-constraints">Include Constraints</label>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="limit">Limit:</label>
+
+              <label htmlFor="limit">Limit (max records):</label>
               <input
                 type="number"
                 id="limit"
+                value={limit}
+                onChange={(e) => setLimit(parseInt(e.target.value))}
                 min="1"
                 max="10000"
-                value={discoveryOptions.limit || 1000}
-                onChange={(e) => handleOptionsChange('limit', parseInt(e.target.value) || 1000)}
                 disabled={isDiscovering}
               />
             </div>
-            
             <div className="form-group">
-              <label htmlFor="offset">Offset:</label>
+              <label htmlFor="offset">Offset (skip records):</label>
               <input
                 type="number"
                 id="offset"
+                value={offset}
+                onChange={(e) => setOffset(parseInt(e.target.value))}
                 min="0"
-                value={discoveryOptions.offset || 0}
-                onChange={(e) => handleOptionsChange('offset', parseInt(e.target.value) || 0)}
                 disabled={isDiscovering}
               />
             </div>
           </div>
         </div>
 
-        <div className="action-section">
-          {discoveryStatus === DiscoveryStatus.IDLE && (
+        <div className="form-actions">
+          {!isDiscovering ? (
+            <>
+              <button
+                className="btn btn-primary"
+                onClick={handleStartDiscovery}
+                disabled={!selectedConnectionId}
+              >
+                Start Discovery
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={handleResetForm}
+              >
+                Reset Form
+              </button>
+            </>
+          ) : (
             <button
-              onClick={handleDiscoveryStart}
-              disabled={!selectedConnectionId}
-              className="discover-button"
+              className="btn btn-danger"
+              onClick={handleStopDiscovery}
             >
-              Start Discovery
+              Stop Discovery
             </button>
-          )}
-          
-          {isDiscovering && (
-            <button className="discover-button running" disabled>
-              {discoveryProgress?.message || 'Discovering...'}
-            </button>
-          )}
-          
-          {discoveryStatus === DiscoveryStatus.FAILED && (
-            <div className="retry-section">
-              <button onClick={handleRetry} className="retry-button">
-                Reset
-              </button>
-              <button onClick={handleDiscoveryStart} className="discover-button">
-                Retry Discovery
-              </button>
-            </div>
-          )}
-          
-          {discoveryStatus === DiscoveryStatus.COMPLETED && (
-            <div className="success-section">
-              <button onClick={handleRetry} className="new-discovery-button">
-                New Discovery
-              </button>
-            </div>
           )}
         </div>
+
+        {discoveryError && (
+          <div className="error-message">
+            <strong>Error:</strong> {discoveryError}
+          </div>
+        )}
       </div>
 
-      <MetadataDiscoveryStatus
-        status={discoveryStatus}
-        progress={discoveryProgress}
-        statistics={discoveryResults?.statistics}
-        error={error}
-        connectionName={selectedConnection?.connectionName}
-      />
+      {(isDiscovering || discoveryProgress) && (
+        <MetadataDiscoveryStatus
+          status={discoveryStatus}
+          progress={discoveryProgress}
+        />
+      )}
 
-      {discoveryResults && discoveryStatus === DiscoveryStatus.COMPLETED && (
+      {discoveryResults && (
         <MetadataDiscoveryResults
           results={discoveryResults}
-          onClose={() => setDiscoveryResults(null)}
         />
       )}
     </div>
