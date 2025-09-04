@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { OracleOnboardingForm } from './oracle/OracleOnboardingForm';
 import { OracleConnectionList } from './oracle/OracleConnectionList';
+import { GraphDashboard } from './graph/GraphDashboard';
 import { OracleConnection } from '../types/oracle';
 import './DatabaseOnboardingDashboard.css';
 
@@ -56,6 +57,13 @@ export const DatabaseOnboardingDashboard: React.FC = () => {
           refresh={refreshConnections}
           onRefreshComplete={handleRefreshComplete}
         />
+      )
+    },
+    {
+      id: 'graph',
+      label: 'Graph Visualization',
+      component: (
+        <GraphDashboard />
       )
     }
   ];
