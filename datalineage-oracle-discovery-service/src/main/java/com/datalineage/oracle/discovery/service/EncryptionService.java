@@ -21,7 +21,7 @@ public class EncryptionService {
     private static final String ALGORITHM = "AES";
     private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
     
-    @Value("${datalineage.encryption.key:defaultEncryptionKey123456}")
+    @Value("${datalineage.encryption.key}")
     private String encryptionKey;
     
     // Setter for testing purposes
