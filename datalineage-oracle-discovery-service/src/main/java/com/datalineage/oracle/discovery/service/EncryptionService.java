@@ -98,8 +98,11 @@ public class EncryptionService {
      * Gets the secret key for encryption/decryption
      */
     private SecretKey getSecretKey() {
-        // For production, this should be loaded from a secure key management system
-        // For now, using a simple approach with configurable key
+        // WARNING: Not production-ready. For production deployments, the encryption key
+        // MUST be securely loaded from a dedicated key management system such as AWS KMS,
+        // HashiCorp Vault, Azure Key Vault, or GCP Secret Manager. Never hardcode or store
+        // encryption keys in source code or configuration files. This implementation is for
+        // development and testing purposes only.
         String key = padKey(encryptionKey, 16); // AES-128 requires 16 bytes
         return new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), ALGORITHM);
     }
