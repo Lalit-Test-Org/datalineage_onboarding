@@ -13,6 +13,12 @@ import java.util.UUID;
 @Table(name = "kafka_connections")
 public class KafkaConnectionEntity extends BaseEntity {
     
+    @Id
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+    
     @Column(name = "connection_id", unique = true, nullable = false)
     private String connectionId;
     
@@ -70,9 +76,9 @@ public class KafkaConnectionEntity extends BaseEntity {
     @Column(name = "connection_status")
     private String connectionStatus;
     
-    // Relationship with topics
-    @OneToMany(mappedBy = "kafkaConnection", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<KafkaTopicEntity> topics = new HashSet<>();
+    // Relationship with topics (simple reference for now)
+    @Column(name = "topics")
+    private String topicIds; // JSON array of topic IDs as string
     
     // Default constructor
     public KafkaConnectionEntity() {
@@ -235,11 +241,11 @@ public class KafkaConnectionEntity extends BaseEntity {
         this.connectionStatus = connectionStatus;
     }
     
-    public Set<KafkaTopicEntity> getTopics() {
-        return topics;
+    public String getTopicIds() {
+        return topicIds;
     }
     
-    public void setTopics(Set<KafkaTopicEntity> topics) {
-        this.topics = topics;
+    public void setTopicIds(String topicIds) {
+        this.topicIds = topicIds;
     }
 }

@@ -11,6 +11,12 @@ import java.util.UUID;
 @Table(name = "avro_fields")
 public class AvroFieldEntity extends BaseEntity {
     
+    @Id
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+    
     @Column(name = "field_name", nullable = false)
     private String fieldName;
     
@@ -56,10 +62,9 @@ public class AvroFieldEntity extends BaseEntity {
     @Column(name = "union_types")
     private String unionTypes; // JSON array as string
     
-    // Relationship with schema
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "avro_schema_id", nullable = false)
-    private AvroSchemaEntity schema;
+    // Simple schema reference (avoiding complex JPA relationships for now)
+    @Column(name = "avro_schema_id")
+    private String schemaId;
     
     // Default constructor
     public AvroFieldEntity() {
@@ -190,11 +195,11 @@ public class AvroFieldEntity extends BaseEntity {
         this.unionTypes = unionTypes;
     }
     
-    public AvroSchemaEntity getSchema() {
-        return schema;
+    public String getSchemaId() {
+        return schemaId;
     }
     
-    public void setSchema(AvroSchemaEntity schema) {
-        this.schema = schema;
+    public void setSchemaId(String schemaId) {
+        this.schemaId = schemaId;
     }
 }

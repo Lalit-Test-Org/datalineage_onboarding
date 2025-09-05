@@ -13,6 +13,12 @@ import java.util.UUID;
 @Table(name = "kafka_topics")
 public class KafkaTopicEntity extends BaseEntity {
     
+    @Id
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+    
     @Column(name = "topic_name", nullable = false)
     private String topicName;
     
@@ -56,14 +62,9 @@ public class KafkaTopicEntity extends BaseEntity {
     @Column(name = "value_schema_subject")
     private String valueSchemaSubject;
     
-    // Relationship with connection
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kafka_connection_id", nullable = false)
-    private KafkaConnectionEntity kafkaConnection;
-    
-    // Relationship with schemas
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<AvroSchemaEntity> schemas = new HashSet<>();
+    // Simple connection reference (avoiding complex JPA relationships for now)
+    @Column(name = "kafka_connection_id")
+    private String kafkaConnectionId;
     
     // Default constructor
     public KafkaTopicEntity() {
@@ -186,19 +187,11 @@ public class KafkaTopicEntity extends BaseEntity {
         this.valueSchemaSubject = valueSchemaSubject;
     }
     
-    public KafkaConnectionEntity getKafkaConnection() {
-        return kafkaConnection;
+    public String getKafkaConnectionId() {
+        return kafkaConnectionId;
     }
     
-    public void setKafkaConnection(KafkaConnectionEntity kafkaConnection) {
-        this.kafkaConnection = kafkaConnection;
-    }
-    
-    public Set<AvroSchemaEntity> getSchemas() {
-        return schemas;
-    }
-    
-    public void setSchemas(Set<AvroSchemaEntity> schemas) {
-        this.schemas = schemas;
+    public void setKafkaConnectionId(String kafkaConnectionId) {
+        this.kafkaConnectionId = kafkaConnectionId;
     }
 }

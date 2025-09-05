@@ -235,7 +235,7 @@ public class KafkaConnectionService {
                                              TopicDescription description, Config config) {
         KafkaTopicEntity topic = new KafkaTopicEntity();
         topic.setTopicName(topicName);
-        topic.setKafkaConnection(connection);
+        topic.setKafkaConnectionId(connection.getId());
         
         if (description != null) {
             topic.setPartitions(description.partitions().size());

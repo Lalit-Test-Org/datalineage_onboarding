@@ -13,6 +13,12 @@ import java.util.UUID;
 @Table(name = "avro_schemas")
 public class AvroSchemaEntity extends BaseEntity {
     
+    @Id
+    @Override
+    public String getId() {
+        return super.getId();
+    }
+    
     @Column(name = "schema_id", nullable = false)
     private Integer schemaId;
     
@@ -37,14 +43,9 @@ public class AvroSchemaEntity extends BaseEntity {
     @Column(name = "schema_fingerprint")
     private String schemaFingerprint;
     
-    // Relationship with topic
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "kafka_topic_id")
-    private KafkaTopicEntity topic;
-    
-    // Relationship with fields
-    @OneToMany(mappedBy = "schema", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<AvroFieldEntity> fields = new HashSet<>();
+    // Simple topic reference (avoiding complex JPA relationships for now)
+    @Column(name = "kafka_topic_id")
+    private String topicId;
     
     // Default constructor
     public AvroSchemaEntity() {
@@ -119,19 +120,11 @@ public class AvroSchemaEntity extends BaseEntity {
         this.schemaFingerprint = schemaFingerprint;
     }
     
-    public KafkaTopicEntity getTopic() {
-        return topic;
+    public String getTopicId() {
+        return topicId;
     }
     
-    public void setTopic(KafkaTopicEntity topic) {
-        this.topic = topic;
-    }
-    
-    public Set<AvroFieldEntity> getFields() {
-        return fields;
-    }
-    
-    public void setFields(Set<AvroFieldEntity> fields) {
-        this.fields = fields;
+    public void setTopicId(String topicId) {
+        this.topicId = topicId;
     }
 }
