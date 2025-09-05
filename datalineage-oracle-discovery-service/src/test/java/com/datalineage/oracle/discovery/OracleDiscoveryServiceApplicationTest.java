@@ -12,7 +12,8 @@ import org.springframework.test.context.TestPropertySource;
     "eureka.client.enabled=false",
     "spring.cloud.config.enabled=false",
     "spring.datasource.url=jdbc:h2:mem:testdb",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "datalineage.encryption.key=test-encryption-key-32-chars"
 })
 class OracleDiscoveryServiceApplicationTest {
 

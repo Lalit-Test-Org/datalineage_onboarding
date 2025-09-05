@@ -18,7 +18,7 @@ spring:
     enabled: false # Disable security for development
 
 server:
-  port: 8084
+  port: 8082
 
 eureka:
   client:
@@ -39,3 +39,8 @@ oracle:
     default-timeout: 30
     max-connections: 10
     connection-pool-size: 5
+
+# Encryption configuration for sensitive data
+datalineage:
+  encryption:
+    key: ${ENCRYPTION_KEY:defaultEncryptionKey123456}
