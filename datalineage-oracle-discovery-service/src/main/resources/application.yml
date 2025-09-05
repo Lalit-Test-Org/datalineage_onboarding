@@ -18,7 +18,7 @@ spring:
     enabled: false # Disable security for development
 
 server:
-  port: 8082
+  port: 8083
 
 eureka:
   client:

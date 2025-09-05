@@ -28,7 +28,8 @@
         <module>datalineage-api-gateway</module>
         <module>datalineage-metadata-service</module>
         <module>datalineage-lineage-service</module>
-        <module>datalineage-discovery-service</module>
+        <!-- Deprecated: functionality merged into datalineage-oracle-discovery-service -->
+        <!-- <module>datalineage-discovery-service</module> -->
         <module>datalineage-oracle-discovery-service</module>
     </modules>
 
