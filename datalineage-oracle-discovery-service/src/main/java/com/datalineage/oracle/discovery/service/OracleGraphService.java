@@ -19,6 +19,17 @@ public class OracleGraphService {
         List<GraphNode> nodes = new ArrayList<>();
         List<GraphEdge> edges = new ArrayList<>();
 
+        // Build lookup maps for performance optimization
+        Map<String, String> ownerTableNameToId = new HashMap<>();
+        Map<String, String> ownerToTableId = new HashMap<>();
+        if (metadata.getTables() != null) {
+            for (OracleTable table : metadata.getTables()) {
+                String tableId = "table-" + table.getId();
+                ownerTableNameToId.put(table.getOwner() + "." + table.getTableName(), tableId);
+                ownerToTableId.put(table.getOwner(), tableId);
+            }
+        }
+
         // Create database schema node
         GraphNode schemaNode = createSchemaNode(metadata);
         nodes.add(schemaNode);
@@ -47,8 +58,8 @@ public class OracleGraphService {
                 GraphNode columnNode = createColumnNode(column);
                 nodes.add(columnNode);
 
-                // Find parent table and connect
-                String parentTableId = findTableId(metadata.getTables(), column.getOwner(), column.getTableName());
+                // Find parent table using lookup map for better performance
+                String parentTableId = ownerTableNameToId.get(column.getOwner() + "." + column.getTableName());
                 if (parentTableId != null) {
                     GraphEdge tableColumnEdge = createEdge(
                         "table-column-" + column.getId(),
@@ -86,8 +97,8 @@ public class OracleGraphService {
                 GraphNode constraintNode = createConstraintNode(constraint);
                 nodes.add(constraintNode);
 
-                // Find related table and connect
-                String relatedTableId = findTableId(metadata.getTables(), constraint.getOwner(), constraint.getTableName());
+                // Find related table using lookup map for better performance
+                String relatedTableId = ownerTableNameToId.get(constraint.getOwner() + "." + constraint.getTableName());
                 if (relatedTableId != null) {
                     GraphEdge tableConstraintEdge = createEdge(
                         "table-constraint-" + constraint.getId(),
@@ -103,7 +114,7 @@ public class OracleGraphService {
                 if ("R".equals(constraint.getConstraintType()) && 
                     constraint.getrOwner() != null && constraint.getrConstraintName() != null) {
                     
-                    String referencedTableId = findTableIdByOwner(metadata.getTables(), constraint.getrOwner());
+                    String referencedTableId = ownerToTableId.get(constraint.getrOwner());
                     if (referencedTableId != null) {
                         GraphEdge foreignKeyEdge = createEdge(
                             "fk-" + constraint.getId(),
