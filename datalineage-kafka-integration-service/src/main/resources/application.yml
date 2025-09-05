@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: datalineage-kafka-integration-service
+  cloud:
+    config:
+      enabled: false
+  datasource:
+    url: jdbc:h2:mem:kafkaintegrationdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+  security:
+    enabled: false # Disable security for development
+
+server:
+  port: 8084
+
+eureka:
+  client:
+    enabled: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+# Kafka integration specific configuration
+kafka:
+  integration:
+    default-timeout: 30
+    max-connections: 10
+    connection-pool-size: 5
+    consumer:
+      group-id: datalineage-kafka-integration
+      auto-offset-reset: earliest
+    producer:
+      retries: 3
+      acks: all
+
+# Schema Registry configuration
+schema-registry:
+  default-timeout: 30
+  cache-size: 1000
+
+# Encryption configuration for sensitive data
+datalineage:
+  encryption:
+    key: ${ENCRYPTION_KEY:defaultEncryptionKey123456}
