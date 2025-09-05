@@ -25,15 +25,13 @@ datalineage_onboarding/
 │   ├── src/main/java/com/datalineage/lineage/
 │   ├── src/main/resources/application.yml
 │   └── pom.xml
-└── datalineage-discovery-service/   # Data discovery service
-│   ├── src/main/java/com/datalineage/discovery/
-│   ├── src/main/resources/application.yml
-│   └── pom.xml
-└── datalineage-oracle-discovery-service/   # Oracle metadata discovery service
+└── datalineage-oracle-discovery-service/   # Oracle metadata discovery & onboarding service
     ├── src/main/java/com/datalineage/oracle/discovery/
     ├── src/main/resources/application.yml
     └── pom.xml
 ```
+
+> **Note**: The `datalineage-discovery-service` has been **deprecated** and its functionality merged into `datalineage-oracle-discovery-service` for better maintainability and performance.
 
 ## Services Overview
 
@@ -71,18 +69,20 @@ datalineage_onboarding/
   - Relationship mapping
   - Impact analysis
 
-### 5. Discovery Service (`datalineage-discovery-service`)
-- **Purpose**: Discovers and catalogs data sources and assets
+### 5. Oracle Discovery Service (`datalineage-oracle-discovery-service`)
+- **Purpose**: Comprehensive Oracle database metadata discovery and connection management
 - **Port**: 8083
-- **Dependencies**: Spring Boot Web, JPA, H2 Database, Eureka Client
+- **Dependencies**: Spring Boot Web, JPA, H2 Database, Oracle JDBC, Eureka Client
 - **Key Features**:
-  - Automated data discovery
-  - Data profiling
-  - Asset cataloging
+  - Oracle database onboarding and connection management
+  - Comprehensive metadata extraction (tables, columns, procedures, constraints)
+  - Direct and Kerberos authentication support
+  - Connection testing and validation
+  - Automated metadata discovery
+  - Graph-based relationship mapping
+  - Encryption for sensitive connection data
 
-### 6. Oracle Discovery Service (`datalineage-oracle-discovery-service`)
-- **Purpose**: Dedicated microservice for Oracle database metadata discovery
-- **Port**: 8084
+> **⚠️ Deprecated Service**: `datalineage-discovery-service` has been merged into this service to eliminate redundancy and improve performance.
 - **Dependencies**: Spring Boot Web, JPA, H2 Database, Oracle JDBC Driver, Eureka Client
 - **Key Features**:
   - Direct and Kerberos authentication support
